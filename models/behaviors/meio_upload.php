@@ -300,6 +300,37 @@ class MeioUploadBehavior extends ModelBehavior {
 		$this->__filesToRemove = array();
 	}
 
+ /**
+ * Add additional information as array to field
+ *
+ * @param object $Model Model on which we are resetting
+ * @param array $results Results of the find operation
+ * @param bool $primary true if this is the primary model that issued the find operation, false otherwise
+ * @access public
+ */
+	function afterFind(&$model, $results, $primary) {
+		foreach ($this->__fields[$model->alias] as $fieldName => $options) {
+            foreach ($results as $key => $row) {
+                if(isset($row[$model->alias][$fieldName])){
+                    $basename = $row[$model->alias][$fieldName];
+                    $temp = array();
+                    $temp['basename'] = $basename;
+                    $temp['dir'] = $options['dir'];
+                    // If there are thumbnails
+                    if (count($options['thumbsizes']) > 0) {
+                        foreach($options['thumbsizes'] as $index => $value){
+                            $temp['thumbs'][$index] = DS . 'thumb' . DS . $index . DS . $basename;
+                        }
+                    }
+
+                    $results[$key][$model->alias][$fieldName] = $temp;
+                }
+            }
+		}
+
+        return $results;
+	}
+
 /**
  * Performs a manual upload
  *
